@@ -28,4 +28,11 @@ public class TokenService implements IToken {
         return Optional.ofNullable(tokenRepository.findById(tokenId).orElseThrow(() -> new UseException(UseExceptionType.TOKEN_NOT_FOUND)));
     }
 
+    public Optional<Token> getTokenById(String tokenId) {
+            return tokenRepository.findById(tokenId);
+    }
+
+    public Token saveToken(Token token) {
+        return tokenRepository.save(token);
+    }
 }
