@@ -54,21 +54,16 @@
             <version>RELEASE</version>
             <scope>compile</scope>
         </dependency>
-
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.25</version>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
-
-        <!-- https://mvnrepository.com/artifact/com.h2database/h2 -->
-
+          <!-- https://mvnrepository.com/artifact/com.h2database/h2 -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>1.4.200</version>
-            <scope>compile</scope>
+            <scope>runtime</scope>
         </dependency>
 
 
@@ -86,6 +81,14 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>16</source>
+                    <target>16</target>
                 </configuration>
             </plugin>
         </plugins>
