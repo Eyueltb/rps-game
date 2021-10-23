@@ -31,6 +31,14 @@ public class GameService implements IGame {
         return Optional.of(game);
     }
 
+    public String getGameId(String tokenId) throws UseException {
+        if(tokenRepository.findAll().stream().noneMatch(t->t.getId().equals(tokenId)))
+            throw new UseException(UseExceptionType.TOKEN_NOT_FOUND);
+        else if (tokenRepository.findAll().stream().filter(t->t.getId().equals(tokenId)).findAny().get().getOwnedGame().getId()==null)
+            throw new UseException(UseExceptionType.TOKEN_NOT_FOUND);
+        else
+            return tokenRepository.findAll().stream().filter(t->t.getId().equals(tokenId)).findAny().get().getOwnedGame().getId();
+    }
     private Game getGameEntity(Optional<Token> owner, CreateGame createGame) {
         String id= UUID.randomUUID().toString();
         Game gameEntity=new Game(
@@ -55,14 +63,13 @@ public class GameService implements IGame {
     }
 
 
-    private Stream<Game> getGameByGameStatus(Status gameStatus) throws UseException {
+    private Stream<Game> getGameByGameStatus(Status gameStatus) {
         return switch(gameStatus){
             case OPEN-> filterGame(Status.OPEN);
             case ACTIVE-> filterGame(Status.ACTIVE);
             case WIN-> filterGame(Status.WIN);
             case LOSE-> filterGame(Status.LOSE);
             case DRAW-> filterGame(Status.DRAW);
-            default -> throw new UseException(UseExceptionType.No_SUCH_GAME_STATUS);
         };
     }
     private Stream<Game> filterGame(Status status) {
