@@ -13,4 +13,9 @@ public class GameService implements IGame{
     public Optional<Game> createGame(String tokenId) {
         return Optional.empty();
     }
+
+    @Override
+    public Optional<Game> joinGame(String tokenId, String ownerId) {
+        return Optional.empty();
+    }
 }
