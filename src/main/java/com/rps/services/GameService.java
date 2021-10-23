@@ -15,6 +15,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import static com.rps.exceptions.UseExceptionType.GAME_ALREADY_STARTED;
+import static com.rps.exceptions.UseExceptionType.GAME_NOT_FOUND;
+
 @Service
 @AllArgsConstructor
 public class GameService implements IGame {
@@ -52,8 +55,25 @@ public class GameService implements IGame {
         return gameEntity;
     }
     @Override
-    public Optional<Game> joinGame(String tokenId, String ownerId) {
-        return Optional.empty();
+    public Optional<Game> joinGame(String tokenId, String ownerGameId) throws UseException {
+        Token opponentToken = getToken(tokenId).get();
+        Game gameEntity = gameRepository.findById(ownerGameId).orElseThrow(()->new UseException(GAME_NOT_FOUND));
+        switch (gameEntity.getGameStatus()){
+            case WIN,LOSE, DRAW -> throw new UseException(GAME_NOT_FOUND);
+            case ACTIVE-> throw new UseException(GAME_ALREADY_STARTED);
+            case OPEN->  gameEntity = getAndSetStatusWhenJoinGame(opponentToken, gameEntity);
+            default -> throw new IllegalStateException("Unexpected value: " + gameEntity.getGameStatus());
+        };
+        return Optional.of(gameEntity);
+    }
+    private Game getAndSetStatusWhenJoinGame(Token opponentToken, Game gameEntity) {
+        gameEntity.setOpponent(opponentToken);
+        gameEntity.setGameStatus(Status.ACTIVE);
+        opponentToken.setJoinGame(gameEntity);
+        opponentToken.setName(opponentToken.getName());
+        tokenRepository.save(opponentToken);
+        //gameEntity =gameRepository.save(gameEntity);
+        return gameRepository.save(gameEntity);
     }
 
     private Optional<Token> getToken(String tokenId) throws UseException {
