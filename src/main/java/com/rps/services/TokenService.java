@@ -1,22 +1,32 @@
 package com.rps.services;
 
+import com.rps.exceptions.UseException;
+import com.rps.exceptions.UseExceptionType;
 import com.rps.models.Token;
+import com.rps.repositories.TokenRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import javax.print.attribute.UnmodifiableSetException;
 import java.util.Optional;
 
 @Service
 @AllArgsConstructor
 
-public class TokenService implements IToken{
+public class TokenService implements IToken {
+    TokenRepository tokenRepository;
     @Override
-    public Optional<Token> getAToken(String tokenId) {
-        return Optional.empty();
+    public Token createToken() {
+        return tokenRepository.save(Token.create());
     }
 
     @Override
     public boolean verifyToken(String tokenId) {
-        return false;
+     return tokenRepository.findAll().stream().anyMatch(token -> token.getId().equals(tokenId));
     }
+    @Override
+    public Optional<Token> getAToken(String tokenId) throws UseException {
+        return Optional.ofNullable(tokenRepository.findById(tokenId).orElseThrow(() -> new UseException(UseExceptionType.TOKEN_NOT_FOUND)));
+    }
+
 }
