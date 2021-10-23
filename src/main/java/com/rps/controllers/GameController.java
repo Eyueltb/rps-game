@@ -1,6 +1,7 @@
 package com.rps.controllers;
 
 import com.rps.dto.GameDTO;
+import com.rps.enums.Move;
 import com.rps.exceptions.UseException;
 import com.rps.models.Game;
 import com.rps.services.GameService;
@@ -31,6 +32,11 @@ public class GameController {
     public GameDTO joinGame(@PathVariable String gameId,
                          @RequestHeader (value="token", required = false) String tokenId) throws UseException {
         return gameService.joinGame(tokenId, gameId).map(this::toGameDTO).orElseThrow(()->new UseException(GAME_ALREADY_STARTED));
+    }
+    @GetMapping("/move/{sign}")
+    public GameDTO makeMove(@RequestHeader(value = "token") String tokenId,
+                         @PathVariable Move sign) throws UseException {
+        return gameService.makeMove(sign, tokenId).map(this::toGameDTO).orElseThrow(()->new UseException(GAME_ALREADY_STARTED));
     }
     private GameDTO toGameDTO(Game game) {
         return new GameDTO(

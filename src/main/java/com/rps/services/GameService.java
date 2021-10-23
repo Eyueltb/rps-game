@@ -1,5 +1,6 @@
 package com.rps.services;
 
+import com.rps.enums.Move;
 import com.rps.enums.Status;
 import com.rps.exceptions.UseException;
 import com.rps.exceptions.UseExceptionType;
@@ -65,6 +66,52 @@ public class GameService implements IGame {
             default -> throw new IllegalStateException("Unexpected value: " + gameEntity.getGameStatus());
         };
         return Optional.of(gameEntity);
+    }
+    public Optional<Game> makeMove(Move sign, String tokenId) throws UseException {
+        Token token = getToken(tokenId).get();
+        tokenRepository.save(token);
+        Optional<Game> getMove=null;
+        if(token.getOwnedGame()!=null  &&  gameRepository.findAll().stream().anyMatch(g->g.getPlayer().getId().equals(tokenId)))
+            getMove=getOwnerMove(sign, tokenId);
+        else if(token.getJoinGame()!=null )
+            getMove=getJoinerMOVE(sign, tokenId);
+        return getMove;
+    }
+    private Optional<Game> getOwnerMove(Move sign, String tokenId) {
+        Optional<Game> owner=gameRepository.findAll().stream().filter(g->g.getPlayer().getId().equals(tokenId)).findAny();
+        owner.get().setOwnerMove(sign);
+        gameRepository.save(owner.get());
+        return Optional.of(updateGameStatus(owner));
+    }
+    private Optional<Game> getJoinerMOVE(Move sign, String tokenId) {
+        Game joiner=tokenRepository.findById(tokenId).get().getJoinGame();
+        //Optional<GameEntity> joiner=all().filter(g->g.getOpponent().getId().equals(tokenId)).findAny();
+        joiner.setOpponentMove(sign);
+        gameRepository.save(joiner);
+        return Optional.of(updateGameStatus(Optional.of(joiner)));
+    }
+    private Game updateGameStatus(Optional<Game> gameEntity) {
+        Move ownerMove = gameEntity.get().getOwnerMove();
+        Move opponentMove = gameEntity.get().getOpponentMove();
+        if(ownerMove!=null && opponentMove!=null){
+            updateStatus(gameEntity, ownerMove, opponentMove);
+        }
+        return gameEntity.get();
+    }
+    private void updateStatus(Optional<Game> gameEntity, Move ownerMove, Move opponentMove) {
+        switch (ownerMove) {
+            case ROCK-> gameEntity.get().setGameStatus(
+                    (opponentMove==Move.ROCK)? Status.DRAW: (opponentMove==Move.SCISSORS)? Status.WIN: Status.LOSE
+            );
+            case PAPER-> gameEntity.get().setGameStatus(
+                    (opponentMove==Move.PAPER)? Status.DRAW: (opponentMove==Move.ROCK)? Status.WIN: Status.LOSE
+            );
+            case SCISSORS-> gameEntity.get().setGameStatus(
+                    (opponentMove==Move.SCISSORS)? Status.DRAW: (opponentMove==Move.PAPER)? Status.WIN: Status.LOSE
+            );
+            default -> gameEntity.get().setGameStatus(Status.ACTIVE);
+        }
+        gameRepository.save(gameEntity.get());
     }
     private Game getAndSetStatusWhenJoinGame(Token opponentToken, Game gameEntity) {
         gameEntity.setOpponent(opponentToken);
