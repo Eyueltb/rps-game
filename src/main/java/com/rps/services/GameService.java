@@ -24,6 +24,7 @@ import static com.rps.exceptions.UseExceptionType.GAME_NOT_FOUND;
 public class GameService implements IGame {
     GameRepository gameRepository;
     TokenRepository tokenRepository;
+    /** Todo:- Create Game associated with token  */
     @Override
     public Optional<Game> createGame(String tokenId) throws UseException {
         Optional<Token> owner = getToken(tokenId);
@@ -55,18 +56,20 @@ public class GameService implements IGame {
         );
         return gameEntity;
     }
+    /** Todo:- To join open games */
     @Override
     public Optional<Game> joinGame(String tokenId, String ownerGameId) throws UseException {
         Token opponentToken = getToken(tokenId).get();
-        Game gameEntity = gameRepository.findById(ownerGameId).orElseThrow(()->new UseException(GAME_NOT_FOUND));
-        switch (gameEntity.getGameStatus()){
+        Game game = gameRepository.findById(ownerGameId).orElseThrow(()->new UseException(GAME_NOT_FOUND));
+        switch (game.getGameStatus()){
             case WIN,LOSE, DRAW -> throw new UseException(GAME_NOT_FOUND);
             case ACTIVE-> throw new UseException(GAME_ALREADY_STARTED);
-            case OPEN->  gameEntity = getAndSetStatusWhenJoinGame(opponentToken, gameEntity);
-            default -> throw new IllegalStateException("Unexpected value: " + gameEntity.getGameStatus());
+            case OPEN->  game = getAndSetStatusWhenJoinGame(opponentToken, game);
+            default -> throw new IllegalStateException("Unexpected value: " + game.getGameStatus());
         };
-        return Optional.of(gameEntity);
+        return Optional.of(game);
     }
+    /** Todo:- to decide which player win based on a move provided by players( ROCK, PAPER, SCISSORS) */
     public Optional<Game> makeMove(Move sign, String tokenId) throws UseException {
         Token token = getToken(tokenId).get();
         tokenRepository.save(token);
@@ -77,6 +80,45 @@ public class GameService implements IGame {
             getMove=getJoinerMOVE(sign, tokenId);
         return getMove;
     }
+    /** Todo:- Fetch status of the game by TokenId */
+    public Stream<Game> getGameByTokenId(String tokenId) throws UseException {
+        Token token=getToken(tokenId).get();
+        String gameId=getGameIdFromToken(token);
+        return gameRepository.findAll().stream().filter(g->g.getId().equals(gameId));
+    }
+    /** Todo:- Filter game */
+    public Stream<Game> filterByStatus(Status status) throws UseException {
+        if(gameRepository.findAll().stream().findFirst().get()==null) throw new UseException(GAME_NOT_FOUND);
+        return getGameByGameStatus(status);
+    }
+    public Optional<Game> getGame(String gameId, String tokenId) throws UseException {
+        Token token=getToken(tokenId).get();
+        if(token.getOwnedGame()==null)
+            throw new UseException(GAME_NOT_FOUND);
+        else
+            return Optional.ofNullable(gameRepository.findById(token.getOwnedGame().getId())).get();
+    }
+    public Optional<Game> getGameById(String gameId) {
+        return Optional.ofNullable(gameRepository.findById(gameId)).get();
+    }
+    /** Todo:- Fetch gameId from token */
+    private String getGameIdFromToken(Token token) throws UseException  {
+        if(tokenRepository.findAll().stream().anyMatch(t->t.getId().equals(token.getId()))){
+            //if(token.getOwnedGame()!=null && token.getJoinGame()!=null){}
+            if(token.getOwnedGame()!=null) return token.getOwnedGame().getId();
+            else if(token.getJoinGame()!=null) return token.getJoinGame().getId();
+            else
+                throw new UseException(GAME_NOT_FOUND);
+        }
+        throw new UseException(UseExceptionType.TOKEN_NOT_FOUND);
+    }
+    /** Todo:- Fetch available open games */
+    public Stream<Game> getGamesList(String tokenId) throws UseException{
+        String gameId=getGameIdFromToken(getToken(tokenId).get());
+        Stream<Game> games=filterByStatus(Status.OPEN);
+        return games.filter(g->g.getId().equals(gameId));
+    }
+
     private Optional<Game> getOwnerMove(Move sign, String tokenId) {
         Optional<Game> owner=gameRepository.findAll().stream().filter(g->g.getPlayer().getId().equals(tokenId)).findAny();
         owner.get().setOwnerMove(sign);
@@ -113,14 +155,14 @@ public class GameService implements IGame {
         }
         gameRepository.save(gameEntity.get());
     }
-    private Game getAndSetStatusWhenJoinGame(Token opponentToken, Game gameEntity) {
-        gameEntity.setOpponent(opponentToken);
-        gameEntity.setGameStatus(Status.ACTIVE);
-        opponentToken.setJoinGame(gameEntity);
+    private Game getAndSetStatusWhenJoinGame(Token opponentToken, Game game) {
+        game.setOpponent(opponentToken);
+        game.setGameStatus(Status.ACTIVE);
+        opponentToken.setJoinGame(game);
         opponentToken.setName(opponentToken.getName());
         tokenRepository.save(opponentToken);
-        //gameEntity =gameRepository.save(gameEntity);
-        return gameRepository.save(gameEntity);
+        //game =gameRepository.save(game);
+        return gameRepository.save(game);
     }
 
     private Optional<Token> getToken(String tokenId) throws UseException {
@@ -129,9 +171,8 @@ public class GameService implements IGame {
         return tokenRepository.findAll().stream().filter(t->t.getId().equals(tokenId)).findAny();
     }
 
-
-    private Stream<Game> getGameByGameStatus(Status gameStatus) {
-        return switch(gameStatus){
+    private Stream<Game> getGameByGameStatus(Status status) {
+        return switch(status){
             case OPEN-> filterGame(Status.OPEN);
             case ACTIVE-> filterGame(Status.ACTIVE);
             case WIN-> filterGame(Status.WIN);

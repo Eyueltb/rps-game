@@ -5,6 +5,7 @@ import com.rps.exceptions.UseException;
 import com.rps.models.CreateName;
 import com.rps.models.Token;
 import com.rps.services.TokenService;
+import com.sun.istack.Nullable;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,25 +34,26 @@ public class TokenController {
     public boolean verifyToken(@PathVariable String token) {
         return tokenService.verifyToken(token);
     }
+
     @PostMapping("/name")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Token> setName(@RequestBody CreateName createName,
+    public ResponseEntity<TokenDTO> setName(@RequestBody CreateName createName,
                                          @RequestHeader (value="token", required = false) String tokenId) throws UseException {
         Token token=tokenService.getTokenById(tokenId).orElseThrow(()->new UseException(TOKEN_NOT_FOUND));
 
         if(token!=null)
             token.setName(createName.getName());
         tokenService.saveToken(token);
-       //return new ResponseEntity(toTokenDTO(token), HttpStatus.CREATED);
-        return null;
+        return new ResponseEntity<>(toTokenDTO(token), HttpStatus.CREATED);
+        //return null;
     }
 
     private TokenDTO toTokenDTO(Token token){
         return new TokenDTO(
                 token.getId(),
-                token.getOwnedGame().getId(),
+                (token.getOwnedGame()!=null) ? token.getOwnedGame().getId(): "",
                 token.getName(),
-                (token.getJoinGame()!=null ) ? token.getJoinGame().getId():" "
+                (token.getJoinGame()!=null ) ? token.getJoinGame().getId():""
         );
     }
 }

@@ -21,7 +21,7 @@ public class TokenService implements IToken {
 
     @Override
     public boolean verifyToken(String tokenId) {
-     return tokenRepository.findAll().stream().anyMatch(token -> token.getId().equals(tokenId));
+     return tokenRepository.findAll().stream().anyMatch(token -> token.getId().equals(tokenId.toLowerCase()));
     }
     @Override
     public Optional<Token> getAToken(String tokenId) throws UseException {
@@ -29,7 +29,7 @@ public class TokenService implements IToken {
     }
 
     public Optional<Token> getTokenById(String tokenId) {
-            return tokenRepository.findById(tokenId);
+            return Optional.ofNullable(tokenRepository.findById(tokenId).get());
     }
 
     public Token saveToken(Token token) {

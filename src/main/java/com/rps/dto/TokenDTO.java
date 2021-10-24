@@ -14,7 +14,7 @@ public class TokenDTO {
     @JsonCreator
     public TokenDTO(
             @JsonProperty("id") String id,
-            @JsonProperty("employersName") String ownedGameId,
+            @JsonProperty("ownedGameId") String ownedGameId,
             @JsonProperty("name")   String name,
             @JsonProperty("joinedGameId") String joinedGameId) {
         this.id=id;
