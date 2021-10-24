@@ -69,6 +69,46 @@ class RpsApplicationTests {
         assertEquals(game.getId(),  owner.getId());
         assertEquals(game.getOwnerTokenId(),  owner.getOwnerTokenId());
     }
+    @Test
+    void test_join_game() throws UseException {
+        //Given
 
-
+        String ownerTokenId=tokenController.createToken();
+        String opponentTokenId=tokenController.createToken();
+        GameDTO owner=gameController.startGame(ownerTokenId);
+        //When
+        GameDTO joiner=gameController.joinGame(owner.getId(),opponentTokenId);
+        //Then
+        assertEquals(Status.OPEN.name(), owner.getGameStatus());
+        assertEquals(owner.getId(), joiner.getId());
+        assertEquals(owner.getOwnerTokenId(), ownerTokenId);
+        assertEquals(joiner.getOpponentTokenId(), opponentTokenId);
+        assertEquals(Status.ACTIVE.name(), joiner.getGameStatus());
+    }
+    @Test
+    void test_get_game_by_id() throws UseException {
+        //Given
+        String tokenId=tokenController.createToken();
+        GameDTO game=gameController.startGame(tokenId);
+        //When
+        GameDTO owner=gameController.gameInfo(game.getId(),tokenId);
+        //Then
+        assertEquals(Status.OPEN.name(), owner.getGameStatus());
+        assertEquals(owner.getId(), game.getId());
+        assertEquals(game.getOwnerTokenId(), tokenId);
+    }
+    @Test
+    void test_make_move() throws UseException {
+        //Given
+        String ownerTokenId=tokenController.createToken();
+        String opponentTokenId=tokenController.createToken();
+        GameDTO owner=gameController.startGame(ownerTokenId);
+        GameDTO joiner=gameController.joinGame(owner.getId(),opponentTokenId);
+        //when
+        gameController.makeMove(ownerTokenId, Move.PAPER);
+        gameController.makeMove(opponentTokenId, Move.PAPER);
+        String status=gameController.gameGameByTokenId(opponentTokenId).getGameStatus();
+        //Then
+        assertEquals(status,Status.DRAW.name());
+    }
 }
