@@ -77,7 +77,7 @@ public class GameController {
     }
 
     /** Todo:- map Entity Game to GameDTO */
-    private GameDTO toGameDTO(Game game) {
+    public GameDTO toGameDTO(Game game) {
         return new GameDTO(
                 game.getId(),
                 (game.getPlayer()!=null)? game.getPlayer().getId():"",

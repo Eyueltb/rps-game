@@ -48,7 +48,7 @@ public class TokenController {
         //return null;
     }
 
-    private TokenDTO toTokenDTO(Token token){
+    public TokenDTO toTokenDTO(Token token){
         return new TokenDTO(
                 token.getId(),
                 (token.getOwnedGame()!=null) ? token.getOwnedGame().getId(): "",

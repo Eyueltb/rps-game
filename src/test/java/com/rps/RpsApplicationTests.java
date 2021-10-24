@@ -111,4 +111,62 @@ class RpsApplicationTests {
         //Then
         assertEquals(status,Status.DRAW.name());
     }
+
+    @Test
+    void test_search() throws UseException {
+        //Given
+        String tokenId=tokenController.createToken();
+        String otherTokenId=tokenController.createToken();
+        String joinerTokenId=tokenController.createToken();
+        GameDTO owner=gameController.startGame(tokenId);
+        gameController.startGame(otherTokenId);
+        //When
+        List<GameDTO> openGames=gameController.searchByGameStatus(Status.OPEN);
+        List<GameDTO> activeGames=gameController.searchByGameStatus(Status.ACTIVE);
+        //Then
+        assertEquals(Status.OPEN.name(),openGames.stream().findFirst().get().getGameStatus());
+        assertEquals(openGames.size(),2);
+        //When
+        GameDTO joiner=gameController.joinGame(owner.getId(),joinerTokenId);
+        openGames=gameController.searchByGameStatus(Status.OPEN);
+        activeGames=gameController.searchByGameStatus(Status.ACTIVE);
+        //Then
+        assertEquals(Status.ACTIVE.name(),activeGames.stream().findFirst().get().getGameStatus());
+        assertEquals(openGames.size(),1);
+    }
+    @Test
+    void test_game_status() throws UseException {
+        //Given
+        String tokenId=tokenController.createToken();
+        GameDTO game=gameController.startGame(tokenId);
+        //When
+        GameDTO gameStatus=gameController.gameGameByTokenId(tokenId);
+        //Then
+        assertEquals(game.getGameStatus(),gameStatus.getGameStatus());
+        assertEquals(game.getId(),gameStatus.getId());
+        assertEquals(game.getOwnerName(),gameStatus.getOwnerName());
+    }
+    @Test
+    void test_get_games() throws UseException {
+        //Given
+        String tokenId=tokenController.createToken();
+        GameDTO game=gameController.startGame(tokenId);
+        //When
+        GameDTO gameEntity= gameController.getGamesList(tokenId).stream().findAny().get();
+        //Then
+        assertEquals(game.getId(),gameEntity.getId());
+        assertEquals(Status.OPEN.name(), game.getGameStatus());
+    }
+    @Test
+    void test_game_Info() throws UseException {
+        //Given
+        String tokenId=tokenController.createToken();
+        GameDTO game=gameController.startGame(tokenId);
+        //When
+        GameDTO gameEntity=gameController.gameInfo(game.getId(),tokenId);
+        //Then
+        assertEquals(game.getId(),gameEntity.getId());
+        assertEquals(game.getOwnerTokenId(),tokenId);
+        assertEquals(Status.OPEN.name(), game.getGameStatus());
+    }
 }
