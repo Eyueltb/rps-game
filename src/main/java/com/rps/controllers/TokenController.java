@@ -37,7 +37,7 @@ public class TokenController {
 
     @PostMapping("/name")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<TokenDTO> setName(@RequestBody CreateName createName,
+    public ResponseEntity<?> setName(@RequestBody CreateName createName,
                                          @RequestHeader (value="token", required = false) String tokenId) throws UseException {
         Token token=tokenService.getTokenById(tokenId).orElseThrow(()->new UseException(TOKEN_NOT_FOUND));
 

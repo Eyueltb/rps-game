@@ -74,7 +74,7 @@ public class GameControllerTests {
         gameRepository.deleteAll();
         tokenRepository.deleteAll();
     }
-    @Test
+   /* @Test
     void test_createToken_success() {
         when(tokenService.getTokenById(token1.getId())).thenReturn(Optional.ofNullable(token1));
         List<TokenDTO> tokenDTOS = getToken(token1.getId());
@@ -98,5 +98,5 @@ public class GameControllerTests {
                 .bodyToFlux(TokenDTO.class)
                 .collectList()
                 .block();
-    }
+    }*/
 }
