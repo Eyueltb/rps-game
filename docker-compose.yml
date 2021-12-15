@@ -1,0 +1,25 @@
+version: '3.1'
+services:
+  app:
+    build: ./
+    restart: on-failure
+    ports:
+      - "8084:8080"
+      -  "5433:5432"
+    depends_on:
+      - "rps"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://rps:5432/rps
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+  rps:
+    image: postgres
+    # ports:
+    # - "5433:5432"
+    environment:
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=rps
+
+
